@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaunchPad — Microsoft Internship Prep Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #111318;
+    --bg3: #181c24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --accent: #00d4ff;
+    --accent2: #7c6fff;
+    --green: #00e87a;
+    --amber: #ffb340;
+    --red: #ff4d6a;
+    --blue: #3b7eff;
+    --ms: #00bcf2;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* ── GRID STAR FIELD ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.1) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 80%, rgba(255,255,255,0.12) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 70%, rgba(255,255,255,0.08) 0%, transparent 100%),
+      radial-gradient(600px at 70% 20%, rgba(0,188,242,0.04) 0%, transparent 70%),
+      radial-gradient(400px at 20% 80%, rgba(124,111,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 72px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 8px;
+    z-index: 100;
+  }
+  .logo {
+    width: 40px; height: 40px;
+    background: var(--ms);
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 8px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .logo span { background: white; border-radius: 2px; }
+  .nav-btn {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(0,212,255,0.1);
+    color: var(--accent);
+  }
+  .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    width: 3px; height: 24px;
+    background: var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+  .nav-spacer { flex: 1; }
+  /* ── TOPBAR ── */
+  .topbar {
+    position: fixed;
+    left: 72px; right: 0; top: 0;
+    height: 64px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 16px;
+    z-index: 99;
+  }
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .topbar-title span { color: var(--accent); }
+  .topbar-spacer { flex: 1; }
+  .day-badge {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+  .day-badge strong { color: var(--accent); }
+  .notify-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    position: relative;
+  }
+  .notify-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 2px solid var(--bg2);
+  }
+  /* ── MAIN ── */
+  .main {
+    margin-left: 72px;
+    padding-top: 64px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+  .page { display: none; padding: 28px; }
+  .page.active { display: block; }
+  /* ── HERO BANNER ── */
+  .hero {
+    background: linear-gradient(135deg, rgba(0,188,242,0.1) 0%, rgba(124,111,255,0.1) 100%);
+    border: 1px solid rgba(0,188,242,0.2);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .hero-text h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .hero-text h1 span { color: var(--accent); }
+  .hero-text p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .hero-stat {
+    margin-left: auto;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .hero-stat .big {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .hero-stat .small { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  /* ── GRID ── */
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 16px; }
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card-sm { padding: 16px; }
+  .card-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h3 .icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  /* ── PROGRESS BAR ── */
+  .prog-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .prog-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  /* ── TIMETABLE ── */
+  .time-slot {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 8px;
+    padding: 10px 8px;
+  }
+  .time-slot:last-child { border-bottom: none; }
+  .time-slot:hover { background: rgba(255,255,255,0.03); }
+  .time-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 70px;
+    padding-top: 2px;
+  }
+  .time-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    flex-shrink: 0;
+    margin-top: 3px;
+    transition: all 0.2s;
+  }
+  .time-slot.done .time-dot { background: var(--green); border-color: var(--green); }
+  .time-slot.active .time-dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .time-slot.skipped .time-dot { background: var(--red); border-color: var(--red); }
+  .time-info { flex: 1; }
+  .time-info .name { font-size: 13px; font-weight: 500; }
+  .time-info .desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .time-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-done { background: rgba(0,232,122,0.1); color: var(--green); }
+  .badge-now { background: rgba(0,212,255,0.1); color: var(--accent); }
+  .badge-pending { background: rgba(255,255,255,0.05); color: var(--muted); }
+  .badge-skip { background: rgba(255,77,106,0.1); color: var(--red); }
+  /* ── CIRCULAR PROGRESS ── */
+  .circ-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .circ-svg { transform: rotate(-90deg); }
+  .circ-inner {
+    position: relative;
+    width: 100px; height: 100px;
+  }
+  .circ-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    flex-direction: column;
+    gap: 0;
+  }
+  .circ-num small { font-size: 10px; color: var(--muted); font-family: 'Inter', sans-serif; }
+  /* ── ACTIVITY LOG ── */
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .act-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .act-text { flex: 1; }
+  .act-text p { font-size: 13px; }
+  .act-text span { font-size: 11px; color: var(--muted); }
+  /* ── MILESTONE ── */
+  .milestone-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .milestone-row:last-child { border-bottom: none; }
+  .ms-label { font-size: 13px; flex: 1; }
+  .ms-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
+  .ms-target { font-size: 11px; color: var(--muted); min-width: 40px; text-align: right; }
+  /* ── TRACKER FORM ── */
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 140px; }
+  .form-group label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+  .form-group select option { background: var(--bg2); }
+  .btn {
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  /* ── WEEK ROADMAP ── */
+  .week-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--bg2);
+  }
+  .week-card.active-week { border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.04); }
+  .week-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .week-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .week-item { font-size: 12px; color: var(--muted); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+  .week-item::before { content: '›'; color: var(--accent); }
+  /* ── INSIGHT BOX ── */
+  .insight {
+    border-left: 3px solid var(--amber);
+    background: rgba(255,179,64,0.05);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .insight.good { border-color: var(--green); background: rgba(0,232,122,0.05); }
+  .insight.bad { border-color: var(--red); background: rgba(255,77,106,0.05); }
+  .insight .ins-label { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  /* ── NOTIFICATION POPUP ── */
+  .notif-panel {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 300px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 16px;
+    z-index: 200;
+    display: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .notif-panel.open { display: block; }
+  .notif-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .notif-text { font-size: 12px; line-height: 1.5; }
+  .notif-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 30px;
+    padding: 12px 24px;
+    font-size: 13px;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  /* ── DSA LOG ── */
+  .dsa-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .dsa-table th { text-align: left; font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .dsa-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  .dsa-table tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .tag-easy { background: rgba(0,232,122,0.12); color: var(--green); }
+  .tag-med { background: rgba(255,179,64,0.12); color: var(--amber); }
+  .tag-hard { background: rgba(255,77,106,0.12); color: var(--red); }
+  /* ── HEATMAP ── */
+  .heatmap { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .heat-cell {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .heat-cell:hover::after {
+    content: attr(data-day);
+    position: absolute;
+    top: -24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .heat-0 { background: var(--bg3); }
+  .heat-1 { background: rgba(0,212,255,0.15); }
+  .heat-2 { background: rgba(0,212,255,0.3); }
+  .heat-3 { background: rgba(0,212,255,0.5); }
+  .heat-4 { background: rgba(0,212,255,0.75); }
+  /* ── CHART BARS ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    background: rgba(0,212,255,0.3);
+    min-height: 4px;
+    transition: all 0.4s;
+    cursor: pointer;
+    position: relative;
+  }
+  .bar:hover { background: var(--accent); }
+  .bar-labels { display: flex; gap: 6px; margin-top: 4px; }
+  .bar-label { flex: 1; font-size: 9px; color: var(--muted); text-align: center; font-family: 'JetBrains Mono', monospace; }
+  /* ── PRODUCTIVITY SCORE ── */
+  .score-ring {
+    width: 120px; height: 120px;
+    position: relative;
+    margin: 0 auto 12px;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-num {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-num .big { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+  .score-num .small { font-size: 11px; color: var(--muted); }
+  /* ── AI CHAT ── */
+  .chat-messages {
+    height: 280px;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .msg-ai {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-radius: 4px 12px 12px 12px;
+  }
+  .msg-user {
+    background: rgba(0,212,255,0.12);
+    border: 1px solid rgba(0,212,255,0.2);
+    align-self: flex-end;
+    border-radius: 12px 4px 12px 12px;
+  }
+  .msg-typing { color: var(--muted); font-style: italic; }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  /* ── RESPONSIVE ── */
+  @media(max-width: 900px) {
+    .grid-3 { grid-template-columns: repeat(2,1fr); }
+    .grid-4 { grid-template-columns: repeat(2,1fr); }
+  }
+  @media(max-width: 600px) {
+    .grid-3, .grid-2, .grid-4 { grid-template-columns: 1fr; }
+    .hero { flex-direction: column; }
+    .sidebar { width: 56px; }
+    .main { margin-left: 56px; }
+    .topbar { left: 56px; }
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin-left: 4px;
+  }
+  .green { color: var(--green); }
+  .amber { color: var(--amber); }
+  .red { color: var(--red); }
+  .accent { color: var(--accent); }
+  .separator { height: 16px; }
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo"><span></span><span></span><span></span><span></span></div>
+  <button class="nav-btn active" onclick="showPage('dashboard')" title="Dashboard">📊</button>
+  <button class="nav-btn" onclick="showPage('timetable')" title="Timetable">⏰</button>
+  <button class="nav-btn" onclick="showPage('dsa')" title="DSA Tracker">💡</button>
+  <button class="nav-btn" onclick="showPage('projects')" title="Projects">🚀</button>
+  <button class="nav-btn" onclick="showPage('roadmap')" title="Roadmap">🗺️</button>
+  <button class="nav-btn" onclick="showPage('assistant')" title="AI Assistant">🤖</button>
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" onclick="showPage('log')" title="Daily Log">📝</button>
+  <button class="nav-btn" onclick="showPage('settings')" title="Settings">⚙️</button>
+</nav>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-title">Launch<span>Pad</span></div>
+  <div class="topbar-spacer"></div>
+  <div class="day-badge">Day <strong id="dayCount">1</strong> of 30</div>
+  <div class="day-badge" id="liveClock">06:30 PM</div>
+  <button class="notify-btn" onclick="toggleNotif()" title="Notifications">
+    🔔
+    <div class="notify-dot" id="notifDot"></div>
+  </button>
+</header>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Notifications</div>
+  <div id="notifList"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: DASHBOARD -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="hero">
+    <div class="hero-text">
+      <h1>One Vacation. <span>One Focus.</span><br>One Internship. One Future.</h1>
+      <p>📍 Target: Win a great internship → Build a career at Microsoft</p>
+    </div>
+    <div class="hero-stat">
+      <div class="big" id="prodScore">--</div>
+      <div class="small">Today's Score</div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="grid-4">
+    <div class="card card-sm">
+      <div class="card-label">Study Hours Today</div>
+      <div class="card-value accent" id="studyHours">0.0</div>
+      <div class="card-sub">Target: 4–6 hrs</div>
+      <div class="prog-bar"><div class="prog-fill" id="studyProg" style="background:var(--accent);width:0%"></div></div>
+    </div>
+    <div class="card card-sm">
+      <div class="card-label">DSA Problems</div>
+      <div class="card-value green" id="dsaCount">0</div>
+      <div class="card-sub">Total: <span id="dsaTotal">0</span> / 100+</div>
+      <div class="prog-bar"><div class="prog-fill" id="dsaProg" style="background:var(--green);width:0%"></div></div>
+    </div>
+    <div class="card card-sm">
+      <div class="card-label">Streak</div>
+      <div class="card-value amber" id="streak">1</div>
+      <div class="card-sub">Day streak 🔥</div>
+      <div class="prog-bar"><div class="prog-fill" id="streakProg" style="background:var(--amber);width:3%"></div></div>
+    </div>
+    <div class="card card-sm">
+      <div class="card-label">Slots Done</div>
+      <div class="card-value" id="slotsDone" style="color:var(--accent2)">0/9</div>
+      <div class="card-sub">Time blocks today</div>
+      <div class="prog-bar"><div class="prog-fill" id="slotsProg" style="background:var(--accent2);width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTIVITY + INSIGHTS -->
+  <div class="grid-2">
+    <div class="card">
+      <h3><span class="icon" style="background:rgba(0,212,255,0.1)">📈</span> Today's Productivity Score</h3>
+      <div class="score-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="10"
+            stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round" id="scoreProg"
+            style="transition: stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="score-num">
+          <div class="big" id="scoreDisplay">0%</div>
+          <div class="small" id="scoreLabel">Getting started</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:var(--muted)">Study Quality</div>
+          <div style="font-size:16px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif" id="qScore">-</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:var(--muted)">Consistency</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green);font-family:'Syne',sans-serif" id="cScore">-</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon" style="background:rgba(255,179,64,0.1)">🔍</span> Smart Insights</h3>
+      <div id="insightList">
+        <div class="insight">
+          <div class="ins-label">💡 Getting Started</div>
+          Log your first activity to get personalized insights!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEKLY HEATMAP -->
+  <div class="card" style="margin-bottom:16px">
+    <h3><span class="icon" style="background:rgba(0,232,122,0.1)">📆</span> 30-Day Activity Heatmap</h3>
+    <div style="margin-bottom:8px;font-size:11px;color:var(--muted)">Sun → Sat</div>
+    <div class="heatmap" id="heatmap"></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--muted)">
+      Less <span style="display:inline-flex;gap:3px">
+        <span style="width:12px;height:12px;background:var(--bg3);border-radius:2px;border:1px solid var(--border)"></span>
+        <span style="width:12px;height:12px;background:rgba(0,212,255,0.15);border-radius:2px"></span>
+        <span style="width:12px;height:12px;background:rgba(0,212,255,0.3);border-radius:2px"></span>
+        <span style="width:12px;height:12px;background:rgba(0,212,255,0.5);border-radius:2px"></span>
+        <span style="width:12px;height:12px;background:rgba(0,212,255,0.75);border-radius:2px"></span>
+      </span> More
+    </div>
+  </div>
+
+  <!-- WEEK BARS -->
+  <div class="grid-2">
+    <div class="card">
+      <h3><span class="icon" style="background:rgba(124,111,255,0.1)">📊</span> Study Hours This Week</h3>
+      <div class="bar-chart" id="weekBars"></div>
+      <div class="bar-labels" id="weekBarLabels"></div>
+    </div>
+    <div class="card">
+      <h3><span class="icon" style="background:rgba(0,232,122,0.1)">🎯</span> Milestone Tracker</h3>
+      <div id="milestoneList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: TIMETABLE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-timetable">
+  <div class="section-title">⏰ Daily Timetable</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>📋 Today's Schedule</h3>
+      <div id="timetableSlots"></div>
+    </div>
+    <div class="card">
+      <h3>⚡ Quick Check-In</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Mark how each time block went</p>
+      <div id="checkInList"></div>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveCheckins()">Save Today's Log</button>
+        <button class="btn btn-secondary" onclick="resetDay()">Reset Day</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>📈 Block Completion Rate</h3>
+    <div id="completionChart"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: DSA TRACKER -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-dsa">
+  <div class="section-title">💡 DSA Problem Tracker</div>
+  <div class="grid-4">
+    <div class="card card-sm"><div class="card-label">Total Solved</div><div class="card-value accent" id="dsaT">0</div><div class="card-sub">Target: 100+</div></div>
+    <div class="card card-sm"><div class="card-label">Easy</div><div class="card-value green" id="dsaE">0</div></div>
+    <div class="card card-sm"><div class="card-label">Medium</div><div class="card-value amber" id="dsaM">0</div></div>
+    <div class="card card-sm"><div class="card-label">Hard</div><div class="card-value red" id="dsaH">0</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>➕ Add Problem</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Problem Name</label>
+          <input type="text" id="dsaName" placeholder="Two Sum">
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Difficulty</label>
+          <select id="dsaDiff">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Topic / Category</label>
+          <select id="dsaTopic">
+            <option>Arrays & Strings</option>
+            <option>Linked List</option>
+            <option>Stack & Queue</option>
+            <option>Trees & BST</option>
+            <option>Graphs</option>
+            <option>Hashing</option>
+            <option>Recursion</option>
+            <option>Backtracking</option>
+            <option>Dynamic Programming</option>
+            <option>Greedy</option>
+            <option>Binary Search</option>
+            <option>Sorting</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Time (min)</label>
+          <input type="number" id="dsaTime" value="30" min="5" max="180">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes (optional)</label>
+        <textarea id="dsaNotes" rows="2" placeholder="Approach used, key insight..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addDSA()">+ Add Problem</button>
+    </div>
+    <div class="card">
+      <h3>📊 Topic Coverage</h3>
+      <div id="topicBars" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>📋 Problem Log</h3>
+    <table class="dsa-table">
+      <thead><tr><th>#</th><th>Problem</th><th>Difficulty</th><th>Topic</th><th>Time</th><th>Date</th></tr></thead>
+      <tbody id="dsaTableBody"></tbody>
+    </table>
+    <div id="dsaEmpty" style="text-align:center;color:var(--muted);padding:30px;font-size:13px">No problems logged yet. Start solving! 💪</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: PROJECTS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-projects">
+  <div class="section-title">🚀 Project Portfolio</div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card">
+      <h3>➕ Add / Update Project</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Project Name</label>
+          <input type="text" id="projName" placeholder="Personal Portfolio Website">
+        </div>
+        <div class="form-group" style="max-width:130px">
+          <label>Progress %</label>
+          <input type="number" id="projProg" value="0" min="0" max="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tech Stack</label>
+          <input type="text" id="projStack" placeholder="React, Node.js, MongoDB">
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Status</label>
+          <select id="projStatus">
+            <option>Planning</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+            <option>On Hold</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addProject()">+ Add Project</button>
+    </div>
+    <div class="card">
+      <h3>🎯 Project Ideas</h3>
+      <div style="display:flex;flex-direction:column;gap:8px" id="ideaList">
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;border:1px solid var(--border)" onclick="fillProject('Personal Portfolio Website','React, TailwindCSS','Planning')">
+          📦 Personal Portfolio Website
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;border:1px solid var(--border)" onclick="fillProject('Task Manager / To-Do App','React, Node.js, MongoDB','Planning')">
+          ✅ Task Manager / To-Do App
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;border:1px solid var(--border)" onclick="fillProject('AI Chatbot / Q&A Assistant','Python, LangChain, OpenAI','Planning')">
+          🤖 AI Chatbot / Q&A Assistant
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;border:1px solid var(--border)" onclick="fillProject('E-Commerce Website','React, Node.js, Stripe','Planning')">
+          🛒 E-Commerce Website
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;border:1px solid var(--border)" onclick="fillProject('Habit Tracker Dashboard','React, Chart.js, LocalStorage','Planning')">
+          📊 Habit Tracker Dashboard
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="projectGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+  <div id="projEmpty" style="text-align:center;color:var(--muted);padding:40px;font-size:13px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">No projects yet. Click an idea above to start! 🚀</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: ROADMAP -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-roadmap">
+  <div class="section-title">🗺️ 30-Day Roadmap</div>
+  <div class="grid-4">
+    <div class="week-card active-week">
+      <div class="week-title" style="color:var(--accent)">Week 1 — Foundation</div>
+      <div class="week-subtitle">Day 1–7</div>
+      <div class="week-item">Revise DSA basics</div>
+      <div class="week-item">Arrays, Strings, Linked List, Stack, Queue</div>
+      <div class="week-item">Solve 50+ problems</div>
+      <div class="week-item">Set up tools & Dev environment</div>
+      <div class="week-item">Plan 2–3 projects</div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Week Progress</div>
+        <div class="prog-bar"><div class="prog-fill" id="w1prog" style="background:var(--accent);width:0%"></div></div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-title">Week 2 — Strengthen</div>
+      <div class="week-subtitle">Day 8–14</div>
+      <div class="week-item">Trees, Graphs, Hashing</div>
+      <div class="week-item">Advanced DSA</div>
+      <div class="week-item">Solve 75+ problems</div>
+      <div class="week-item">Start Project 1</div>
+      <div class="week-item">Give contests</div>
+    </div>
+    <div class="week-card">
+      <div class="week-title">Week 3 — Advance</div>
+      <div class="week-subtitle">Day 15–21</div>
+      <div class="week-item">DP, Greedy, Backtracking</div>
+      <div class="week-item">Hard problems</div>
+      <div class="week-item">Company tagged practice</div>
+      <div class="week-item">Start Project 2</div>
+      <div class="week-item">Mock Interviews</div>
+    </div>
+    <div class="week-card">
+      <div class="week-title">Week 4 — Refine & Apply</div>
+      <div class="week-subtitle">Day 22–30</div>
+      <div class="week-item">System Design Basics</div>
+      <div class="week-item">Behavioral Prep</div>
+      <div class="week-item">Revise everything</div>
+      <div class="week-item">Polish Projects</div>
+      <div class="week-item">Apply for Internships</div>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3>🔧 DSA Focus Areas</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dsaFocusGrid"></div>
+    </div>
+    <div class="card">
+      <h3>⚡ Skills to Build</h3>
+      <div id="skillGrid"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>🏆 Overall Milestone Tracker</h3>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px" id="bigMilestones"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: AI ASSISTANT -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-assistant">
+  <div class="section-title">🤖 AI Study Assistant</div>
+  <div class="grid-2">
+    <div class="card" style="display:flex;flex-direction:column">
+      <h3>💬 Chat with Your Guide</h3>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-ai">👋 Hey! I'm your LaunchPad AI Guide. I'm here to help you prepare for your Microsoft internship. Ask me anything — DSA concepts, project ideas, interview tips, or just how your day went!</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>⚡ Quick Prompts</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-secondary" onclick="quickChat('Analyze my progress today and tell me what I should focus on')">📊 Analyze my progress</button>
+        <button class="btn btn-secondary" onclick="quickChat('I skipped some study blocks today. What should I do?')">😟 I skipped study blocks</button>
+        <button class="btn btn-secondary" onclick="quickChat('Explain Dynamic Programming with a simple example')">💡 Explain Dynamic Programming</button>
+        <button class="btn btn-secondary" onclick="quickChat('What DSA topics should I prioritize for Microsoft interviews?')">🎯 Microsoft interview topics</button>
+        <button class="btn btn-secondary" onclick="quickChat('Give me a mock interview question for today')">🎤 Give me a mock question</button>
+        <button class="btn btn-secondary" onclick="quickChat('I am feeling demotivated. Help me get back on track.')">💪 I need motivation</button>
+        <button class="btn btn-secondary" onclick="quickChat('Review my week and suggest improvements')">📅 Review my week</button>
+        <button class="btn btn-secondary" onclick="quickChat('Suggest a project I can build this week to impress recruiters')">🚀 Project suggestion</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: DAILY LOG -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-log">
+  <div class="section-title">📝 Daily Activity Log</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>➕ Log Activity</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Activity</label>
+          <input type="text" id="actName" placeholder="Solved 3 DP problems on LeetCode">
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Type</label>
+          <select id="actType">
+            <option>DSA Practice</option>
+            <option>Project Work</option>
+            <option>Learning</option>
+            <option>Revision</option>
+            <option>Contest</option>
+            <option>Mock Interview</option>
+            <option>Break</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Duration (minutes)</label>
+          <input type="number" id="actDur" value="60" min="5">
+        </div>
+        <div class="form-group">
+          <label>Quality (1-5)</label>
+          <select id="actQual">
+            <option value="1">1 — Poor</option>
+            <option value="2">2 — Below avg</option>
+            <option value="3" selected>3 — OK</option>
+            <option value="4">4 — Good</option>
+            <option value="5">5 — Excellent</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="actNotes" rows="2" placeholder="What did you learn? Any blockers?"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="logActivity()">+ Log Activity</button>
+    </div>
+    <div class="card">
+      <h3>📋 Today's Log</h3>
+      <div id="todayLog" style="max-height:360px;overflow-y:auto"></div>
+      <div id="logEmpty" style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Nothing logged yet today. Start your first activity!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: SETTINGS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="section-title">⚙️ Settings</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>🎯 Goals</h3>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Daily Study Target (hours)</label>
+        <input type="number" id="setStudyTarget" value="5" min="1" max="12">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Daily DSA Problems Target</label>
+        <input type="number" id="setDsaTarget" value="3" min="1" max="20">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Vacation Start Date</label>
+        <input type="date" id="setStartDate">
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Your Name</label>
+        <input type="text" id="setName" value="Future Engineer" placeholder="Your name">
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div class="card">
+      <h3>🔔 Notifications</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="notifStudy" checked> Study block reminders
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="notifBreak" checked> Break reminders
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="notifDsa" checked> DSA daily goal reminder
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="notifMotiv" checked> Evening motivation message
+        </label>
+      </div>
+      <div style="margin-top:20px">
+        <h3 style="margin-bottom:12px">🗑️ Data</h3>
+        <button class="btn btn-secondary" onclick="exportData()" style="margin-right:8px">Export Data</button>
+        <button class="btn btn-secondary" onclick="clearAll()" style="color:var(--red)">Clear All Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let state = {
+  startDate: new Date().toISOString().split('T')[0],
+  name: 'Future Engineer',
+  studyTarget: 5,
+  dsaTarget: 3,
+  activities: [],
+  dsaProblems: [],
+  projects: [],
+  slotStatus: {},
+  notifications: [],
+  heatmap: {},
+  weeklyHours: [0,0,0,0,0,0,0],
+  milestones: { dsa:0, contests:0, projects:0, mocks:0, days:1 }
+};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('launchpad_state');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('launchpad_state', JSON.stringify(state)); } catch(e) {}
+}
+
+// ══════════════════════════════════════
+// TIMETABLE DATA
+// ══════════════════════════════════════
+const slots = [
+  { id:'s1', time:'6:00–8:00 AM', name:'Morning Slot', desc:'Workout / Walk / Visit / Personal Time', type:'flex' },
+  { id:'s2', time:'8:00–9:00 AM', name:'Plan & Prepare', desc:'Plan the day, set goals, light reading', type:'prep' },
+  { id:'s3', time:'9:00–11:00 AM', name:'Study Block 1', desc:'DSA / Problem Solving', type:'study' },
+  { id:'s4', time:'11:00–1:00 PM', name:'Study Block 2', desc:'DSA Practice / Contests / Revising Concepts', type:'study' },
+  { id:'s5', time:'1:00–2:00 PM', name:'Lunch & Break', desc:'Relax, Recharge', type:'break' },
+  { id:'s6', time:'2:00–4:00 PM', name:'Study Block 3', desc:'Data Structures / Advanced Topics', type:'study' },
+  { id:'s7', time:'4:00–6:00 PM', name:'Study Block 4', desc:'Problem Solving / Company Questions', type:'study' },
+  { id:'s8', time:'6:00–7:00 PM', name:'Break & Refresh', desc:'Walk / Music / Break', type:'break' },
+  { id:'s9', time:'7:00–8:30 PM', name:'Projects / Coding', desc:'Work on Projects / Build & Implement', type:'project' },
+  { id:'s10', time:'8:30–9:30 PM', name:'Learn & Grow', desc:'Read / Watch / Tech Talk / Courses', type:'learn' },
+  { id:'s11', time:'9:30–10:00 PM', name:'Review & Plan', desc:"Today's Review, Plan Tomorrow", type:'review' },
+];
+
+const slotColors = { flex:'var(--accent2)', prep:'var(--blue)', study:'var(--accent)', break:'var(--green)', project:'var(--amber)', learn:'var(--accent)', review:'var(--muted)' };
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const pages = ['dashboard','timetable','dsa','projects','roadmap','assistant','','log','settings'];
+  const idx = pages.indexOf(id);
+  if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
+  renderAll();
+}
+
+// ══════════════════════════════════════
+// CLOCK + DAY COUNT
+// ══════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+  const hh = now.getHours() % 12 || 12;
+  document.getElementById('liveClock').textContent = `${hh}:${m} ${ampm}`;
+
+  const start = new Date(state.startDate);
+  const diff = Math.floor((now - start) / 86400000) + 1;
+  document.getElementById('dayCount').textContent = Math.max(1, Math.min(diff, 30));
+
+  // check slot notifications
+  checkSlotAlerts(now);
+}
+
+// ══════════════════════════════════════
+// SLOT ALERTS
+// ══════════════════════════════════════
+const alertedSlots = new Set();
+const slotStartHours = [6,8,9,11,13,14,16,18,19,20.5,21.5];
+function checkSlotAlerts(now) {
+  const h = now.getHours() + now.getMinutes()/60;
+  slots.forEach((slot, i) => {
+    const start = slotStartHours[i];
+    if (Math.abs(h - start) < 0.02 && !alertedSlots.has(slot.id)) {
+      alertedSlots.add(slot.id);
+      addNotif(`⏰ Time for: ${slot.name}`, slot.desc, 'var(--accent)');
+      showToast(`⏰ ${slot.name} starting now!`);
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════
+function addNotif(title, body, color='var(--accent)') {
+  const now = new Date();
+  state.notifications.unshift({ title, body, color, time: `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}` });
+  if (state.notifications.length > 20) state.notifications.pop();
+  document.getElementById('notifDot').style.display = 'block';
+  renderNotifs();
+}
+
+function renderNotifs() {
+  const list = document.getElementById('notifList');
+  if (!state.notifications.length) { list.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:12px">No notifications</p>'; return; }
+  list.innerHTML = state.notifications.slice(0,8).map(n => `
+    <div class="notif-item">
+      <div class="notif-dot" style="background:${n.color}"></div>
+      <div class="notif-text">
+        <div style="font-weight:500">${n.title}</div>
+        <div style="color:var(--muted)">${n.body}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleNotif() {
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+  document.getElementById('notifDot').style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.notif-btn') && !e.target.closest('.notif-panel')) {
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+});
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════
+// PRODUCTIVITY SCORE
+// ══════════════════════════════════════
+function calcScore() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayActs = state.activities.filter(a => a.date === today);
+  const totalMins = todayActs.reduce((s,a) => s + parseInt(a.duration||0), 0);
+  const studyHrs = totalMins / 60;
+  const slotKeys = Object.entries(state.slotStatus).filter(([k,v]) => k.startsWith(today));
+  const done = slotKeys.filter(([k,v]) => v==='done').length;
+  const total = slots.length;
+  const avgQual = todayActs.length ? todayActs.reduce((s,a) => s + parseInt(a.quality||3), 0) / todayActs.length : 0;
+  const dsaToday = (state.dsaProblems||[]).filter(p => p.date === today).length;
+
+  let score = 0;
+  score += Math.min(40, (studyHrs / state.studyTarget) * 40);
+  score += Math.min(20, (done / total) * 20);
+  score += Math.min(20, (avgQual / 5) * 20);
+  score += Math.min(20, (dsaToday / state.dsaTarget) * 20);
+
+  return { score: Math.round(score), studyHrs: studyHrs.toFixed(1), done, total, avgQual: avgQual.toFixed(1), dsaToday };
+}
+
+function updateDashboard() {
+  const { score, studyHrs, done, total, avgQual, dsaToday } = calcScore();
+
+  // prod score
+  document.getElementById('prodScore').textContent = score + '%';
+  document.getElementById('scoreDisplay').textContent = score + '%';
+  const labels = ['Getting started','Warming up','Good pace!','On fire! 🔥','Excellent! 🌟'];
+  document.getElementById('scoreLabel').textContent = labels[Math.min(4, Math.floor(score/20))];
+  const offset = 314 - (314 * score / 100);
+  document.getElementById('scoreProg').style.strokeDashoffset = offset;
+
+  // cards
+  const sh = parseFloat(studyHrs);
+  document.getElementById('studyHours').textContent = studyHrs;
+  document.getElementById('studyProg').style.width = Math.min(100, (sh/state.studyTarget)*100).toFixed(0) + '%';
+
+  const dsaAll = (state.dsaProblems||[]).length;
+  document.getElementById('dsaCount').textContent = dsaToday;
+  document.getElementById('dsaTotal').textContent = dsaAll;
+  document.getElementById('dsaProg').style.width = Math.min(100, (dsaAll/100)*100).toFixed(0) + '%';
+
+  document.getElementById('slotsDone').textContent = `${done}/${total}`;
+  document.getElementById('slotsProg').style.width = ((done/total)*100).toFixed(0) + '%';
+
+  document.getElementById('qScore').textContent = avgQual > 0 ? avgQual + '/5' : '—';
+  document.getElementById('cScore').textContent = state.milestones.days + ' days';
+
+  // insights
+  renderInsights(score, studyHrs, done, total, dsaToday);
+
+  // milestones
+  state.milestones.dsa = dsaAll;
+  renderMilestones();
+}
+
+function renderInsights(score, studyHrs, done, total, dsaToday) {
+  const list = document.getElementById('insightList');
+  const insights = [];
+
+  if (score >= 80) insights.push({ type:'good', title:'🏆 Outstanding!', msg:'You\'re crushing it today. Keep this momentum!' });
+  else if (score >= 60) insights.push({ type:'good', title:'✅ Great progress!', msg:'Solid day. Push a bit more to hit excellence.' });
+  else if (score < 30 && (done > 0 || parseFloat(studyHrs) > 0)) insights.push({ type:'bad', title:'⚠️ Below target', msg:'You\'re lagging today. Focus on study blocks!' });
+  else insights.push({ type:'', title:'💡 Getting started', msg:'Log your first activity to get personalized insights!' });
+
+  if (parseFloat(studyHrs) < 2 && done === 0) insights.push({ type:'bad', title:'📚 Study hours low', msg:'You need at least 4-6 hours of deep work. Start now!' });
+  if (dsaToday === 0) insights.push({ type:'', title:'💡 No DSA yet today', msg:'Solve at least ' + state.dsaTarget + ' problems today.' });
+  if (done >= total * 0.7) insights.push({ type:'good', title:'⏰ Schedule adherence', msg:'You followed ' + done + '/' + total + ' time blocks — great discipline!' });
+
+  list.innerHTML = insights.slice(0,3).map(i => `
+    <div class="insight ${i.type}">
+      <div class="ins-label">${i.title}</div>
+      ${i.msg}
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// HEATMAP
+// ══════════════════════════════════════
+function renderHeatmap() {
+  const hm = document.getElementById('heatmap');
+  const start = new Date(state.startDate);
+  hm.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    const val = state.heatmap[key] || 0;
+    const level = val >= 6 ? 4 : val >= 4 ? 3 : val >= 2 ? 2 : val >= 0.5 ? 1 : 0;
+    const cell = document.createElement('div');
+    cell.className = `heat-cell heat-${level}`;
+    cell.dataset.day = `Day ${i+1}: ${val.toFixed(1)}h`;
+    hm.appendChild(cell);
+  }
+}
+
+// ══════════════════════════════════════
+// WEEK BARS
+// ══════════════════════════════════════
+function renderWeekBars() {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const now = new Date();
+  const dow = now.getDay();
+  const bars = document.getElementById('weekBars');
+  const labels = document.getElementById('weekBarLabels');
+  const hours = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - dow + i);
+    const key = d.toISOString().split('T')[0];
+    const h = state.heatmap[key] || 0;
+    hours.push({ h, day: days[i], isToday: i === dow });
+  }
+  const max = Math.max(...hours.map(x => x.h), 1);
+  bars.innerHTML = hours.map(x => `
+    <div class="bar" style="height:${Math.max(8,(x.h/max)*100)}%;background:${x.isToday?'var(--accent)':'rgba(0,212,255,0.3)'}" title="${x.h.toFixed(1)}h"></div>
+  `).join('');
+  labels.innerHTML = hours.map(x => `<div class="bar-label" style="color:${x.isToday?'var(--accent)':'var(--muted)'}">${x.day}</div>`).join('');
+}
+
+// ══════════════════════════════════════
+// MILESTONES
+// ══════════════════════════════════════
+const milestoneConfig = [
+  { key:'dsa', label:'DSA Problems', target:100, icon:'💡', color:'var(--accent)' },
+  { key:'contests', label:'Contests', target:10, icon:'🏆', color:'var(--amber)' },
+  { key:'projects', label:'Projects', target:2, icon:'🚀', color:'var(--accent2)' },
+  { key:'mocks', label:'Mock Interviews', target:5, icon:'🎤', color:'var(--green)' },
+  { key:'days', label:'Days Consistent', target:30, icon:'🔥', color:'var(--red)' },
+];
+
+function renderMilestones() {
+  const list = document.getElementById('milestoneList');
+  list.innerHTML = milestoneConfig.map(m => {
+    const val = state.milestones[m.key] || 0;
+    const pct = Math.min(100, (val/m.target)*100);
+    return `
+      <div class="milestone-row">
+        <span style="font-size:14px">${m.icon}</span>
+        <span class="ms-label">${m.label}</span>
+        <span class="ms-val">${val}</span>
+        <span class="ms-target">/${m.target}</span>
+      </div>
+      <div class="prog-bar" style="margin-bottom:6px">
+        <div class="prog-fill" style="background:${m.color};width:${pct.toFixed(0)}%"></div>
+      </div>
+    `;
+  }).join('');
+
+  // big milestones on roadmap page
+  const bm = document.getElementById('bigMilestones');
+  if (bm) {
+    bm.innerHTML = milestoneConfig.map(m => {
+      const val = state.milestones[m.key] || 0;
+      const pct = Math.min(100, (val/m.target)*100);
+      return `
+        <div style="text-align:center">
+          <div style="font-size:28px;font-family:'Syne',sans-serif;font-weight:800;color:${m.color}">${val}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${m.label}</div>
+          <div class="prog-bar"><div class="prog-fill" style="background:${m.color};width:${pct.toFixed(0)}%"></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">Target: ${m.target}</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════
+// TIMETABLE PAGE
+// ══════════════════════════════════════
+function renderTimetable() {
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+
+  const container = document.getElementById('timetableSlots');
+  const checkins = document.getElementById('checkInList');
+  if (!container) return;
+
+  container.innerHTML = slots.map((slot, i) => {
+    const start = slotStartHours[i];
+    const end = i < slots.length-1 ? slotStartHours[i+1] : 22;
+    const key = today + '_' + slot.id;
+    const status = state.slotStatus[key] || 'pending';
+    const isCurrent = h >= start && h < end;
+    const isPast = h >= end;
+
+    return `
+      <div class="time-slot ${status === 'done' ? 'done' : status === 'skipped' ? 'skipped' : isCurrent ? 'active' : ''}">
+        <div class="time-label">${slot.time}</div>
+        <div class="time-dot"></div>
+        <div class="time-info">
+          <div class="name">${slot.name}</div>
+          <div class="desc">${slot.desc}</div>
+        </div>
+        <div class="time-badge ${status==='done'?'badge-done':status==='skipped'?'badge-skip':isCurrent?'badge-now':'badge-pending'}">
+          ${status==='done'?'Done':status==='skipped'?'Skipped':isCurrent?'NOW':'Pending'}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  checkins.innerHTML = slots.map(slot => {
+    const key = today + '_' + slot.id;
+    const status = state.slotStatus[key] || 'pending';
+    return `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px">
+        <span style="flex:1;color:var(--muted)">${slot.name}</span>
+        <select onchange="setSlot('${slot.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:3px 6px;font-size:12px;font-family:'Inter',sans-serif">
+          <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+          <option value="done" ${status==='done'?'selected':''}>✅ Done</option>
+          <option value="skipped" ${status==='skipped'?'selected':''}>❌ Skipped</option>
+          <option value="partial" ${status==='partial'?'selected':''}>⚡ Partial</option>
+        </select>
+      </div>
+    `;
+  }).join('');
+}
+
+function setSlot(id, val) {
+  const today = new Date().toISOString().split('T')[0];
+  state.slotStatus[today + '_' + id] = val;
+}
+
+function saveCheckins() {
+  const today = new Date().toISOString().split('T')[0];
+  let h = 0;
+  slots.forEach(s => { if (state.slotStatus[today+'_'+s.id]==='done') h += 1.5; });
+  state.heatmap[today] = (state.heatmap[today]||0);
+  saveState();
+  updateDashboard();
+  renderTimetable();
+  showToast('✅ Daily log saved!');
+  addNotif('📋 Day logged', 'Your schedule has been saved', 'var(--green)');
+}
+
+function resetDay() {
+  const today = new Date().toISOString().split('T')[0];
+  slots.forEach(s => { delete state.slotStatus[today+'_'+s.id]; });
+  saveState();
+  renderTimetable();
+  showToast('🔄 Day reset!');
+}
+
+// ══════════════════════════════════════
+// DSA TRACKER
+// ══════════════════════════════════════
+function addDSA() {
+  const name = document.getElementById('dsaName').value.trim();
+  if (!name) { showToast('⚠️ Enter a problem name'); return; }
+  const prob = {
+    name,
+    difficulty: document.getElementById('dsaDiff').value,
+    topic: document.getElementById('dsaTopic').value,
+    time: parseInt(document.getElementById('dsaTime').value)||30,
+    notes: document.getElementById('dsaNotes').value,
+    date: new Date().toISOString().split('T')[0],
+    id: Date.now()
+  };
+  state.dsaProblems = state.dsaProblems || [];
+  state.dsaProblems.unshift(prob);
+  state.milestones.dsa = state.dsaProblems.length;
+  document.getElementById('dsaName').value = '';
+  document.getElementById('dsaNotes').value = '';
+  saveState();
+  renderDSA();
+  updateDashboard();
+  showToast('✅ Problem added!');
+}
+
+function renderDSA() {
+  const probs = state.dsaProblems || [];
+  document.getElementById('dsaT').textContent = probs.length;
+  document.getElementById('dsaE').textContent = probs.filter(p=>p.difficulty==='easy').length;
+  document.getElementById('dsaM').textContent = probs.filter(p=>p.difficulty==='medium').length;
+  document.getElementById('dsaH').textContent = probs.filter(p=>p.difficulty==='hard').length;
+
+  const tbody = document.getElementById('dsaTableBody');
+  const empty = document.getElementById('dsaEmpty');
+  if (!probs.length) { empty.style.display='block'; tbody.innerHTML=''; return; }
+  empty.style.display='none';
+  tbody.innerHTML = probs.slice(0,50).map((p,i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td>${p.name}</td>
+      <td><span class="tag tag-${p.difficulty}">${p.difficulty}</span></td>
+      <td style="color:var(--muted)">${p.topic}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${p.time}m</td>
+      <td style="color:var(--muted);font-size:11px">${p.date}</td>
+    </tr>
+  `).join('');
+
+  // topic bars
+  const topics = {};
+  probs.forEach(p => { topics[p.topic] = (topics[p.topic]||0)+1; });
+  const sorted = Object.entries(topics).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max = sorted[0]?.[1]||1;
+  document.getElementById('topicBars').innerHTML = sorted.map(([t,c]) => `
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:var(--muted)">${t}</span>
+        <span style="color:var(--accent)">${c}</span>
+      </div>
+      <div class="prog-bar">
+        <div class="prog-fill" style="background:var(--accent);width:${(c/max)*100}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// PROJECTS
+// ══════════════════════════════════════
+function addProject() {
+  const name = document.getElementById('projName').value.trim();
+  if (!name) { showToast('⚠️ Enter a project name'); return; }
+  const existing = (state.projects||[]).findIndex(p=>p.name===name);
+  const proj = {
+    name,
+    progress: parseInt(document.getElementById('projProg').value)||0,
+    stack: document.getElementById('projStack').value,
+    status: document.getElementById('projStatus').value,
+    id: existing>=0 ? state.projects[existing].id : Date.now(),
+    created: existing>=0 ? state.projects[existing].created : new Date().toISOString().split('T')[0]
+  };
+  if (existing >= 0) state.projects[existing] = proj;
+  else { state.projects = state.projects||[]; state.projects.unshift(proj); }
+  state.milestones.projects = (state.projects||[]).filter(p=>p.status==='Completed').length;
+  document.getElementById('projName').value=''; document.getElementById('projStack').value='';
+  saveState();
+  renderProjects();
+  showToast('✅ Project saved!');
+}
+
+function fillProject(name, stack, status) {
+  document.getElementById('projName').value = name;
+  document.getElementById('projStack').value = stack;
+  document.getElementById('projStatus').value = status;
+  document.getElementById('projProg').value = 0;
+}
+
+function renderProjects() {
+  const projs = state.projects||[];
+  const grid = document.getElementById('projectGrid');
+  const empty = document.getElementById('projEmpty');
+  if (!projs.length) { empty.style.display='block'; grid.innerHTML=''; return; }
+  empty.style.display='none';
+  const colors = { Planning:'var(--muted)', 'In Progress':'var(--accent)', Completed:'var(--green)', 'On Hold':'var(--amber)' };
+  grid.innerHTML = projs.map(p => `
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:600">${p.name}</div>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:${colors[p.status]}">${p.status}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${p.stack||'No stack specified'}</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:var(--muted)">Progress</span>
+        <span style="color:var(--accent)">${p.progress}%</span>
+      </div>
+      <div class="prog-bar">
+        <div class="prog-fill" style="background:${colors[p.status]};width:${p.progress}%"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <input type="number" value="${p.progress}" min="0" max="100" style="width:60px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 6px;font-size:12px" id="pp_${p.id}">
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="updateProjProg(${p.id})">Update</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateProjProg(id) {
+  const input = document.getElementById('pp_'+id);
+  if (!input) return;
+  const p = state.projects.find(p=>p.id===id);
+  if (p) { p.progress = parseInt(input.value)||0; saveState(); renderProjects(); showToast('✅ Updated!'); }
+}
+
+// ══════════════════════════════════════
+// ACTIVITY LOG
+// ══════════════════════════════════════
+function logActivity() {
+  const name = document.getElementById('actName').value.trim();
+  if (!name) { showToast('⚠️ Describe the activity'); return; }
+  const today = new Date().toISOString().split('T')[0];
+  const dur = parseInt(document.getElementById('actDur').value)||60;
+  const act = {
+    name,
+    type: document.getElementById('actType').value,
+    duration: dur,
+    quality: parseInt(document.getElementById('actQual').value)||3,
+    notes: document.getElementById('actNotes').value,
+    date: today,
+    time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+    id: Date.now()
+  };
+  state.activities.unshift(act);
+  // update heatmap
+  const todayActs = state.activities.filter(a=>a.date===today);
+  state.heatmap[today] = todayActs.reduce((s,a)=>s+parseInt(a.duration||0),0)/60;
+
+  document.getElementById('actName').value=''; document.getElementById('actNotes').value='';
+  saveState();
+  renderLog();
+  updateDashboard();
+  showToast('✅ Activity logged!');
+}
+
+const actIcons = { 'DSA Practice':'💡','Project Work':'🚀','Learning':'📚','Revision':'📝','Contest':'🏆','Mock Interview':'🎤','Break':'☕','Other':'⚡' };
+const actBg = { 'DSA Practice':'rgba(0,212,255,0.1)','Project Work':'rgba(255,179,64,0.1)','Learning':'rgba(124,111,255,0.1)','Revision':'rgba(0,232,122,0.1)','Contest':'rgba(255,179,64,0.15)','Mock Interview':'rgba(0,232,122,0.15)','Break':'rgba(255,255,255,0.05)','Other':'rgba(255,255,255,0.05)' };
+
+function renderLog() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayActs = state.activities.filter(a=>a.date===today);
+  const container = document.getElementById('todayLog');
+  const empty = document.getElementById('logEmpty');
+  if (!todayActs.length) { empty.style.display='block'; container.innerHTML=''; return; }
+  empty.style.display='none';
+  container.innerHTML = todayActs.map(a => `
+    <div class="activity-item">
+      <div class="act-icon" style="background:${actBg[a.type]||'rgba(255,255,255,0.05)'}">${actIcons[a.type]||'⚡'}</div>
+      <div class="act-text">
+        <p>${a.name}</p>
+        <span>${a.type} • ${a.duration}min • Quality: ${a.quality}/5 • ${a.time}</span>
+        ${a.notes?`<p style="font-size:11px;color:var(--muted);margin-top:2px">${a.notes}</p>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// ROADMAP PAGE
+// ══════════════════════════════════════
+function renderRoadmap() {
+  const dsaAreas = ['Arrays & Strings','Linked List','Stack & Queue','Trees & BST','Graphs','Hashing','Recursion','Backtracking','Dynamic Programming','Greedy Algorithms'];
+  const fg = document.getElementById('dsaFocusGrid');
+  if (fg) fg.innerHTML = dsaAreas.map(t => {
+    const count = (state.dsaProblems||[]).filter(p=>p.topic===t).length;
+    return `
+      <div style="background:var(--bg3);border-radius:8px;padding:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${t}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--accent)">${count}</div>
+      </div>
+    `;
+  }).join('');
+
+  const skills = ['C++ / Java / Python','HTML, CSS, JavaScript','Git & GitHub','DBMS (SQL)','System Design Basics','Communication Skills'];
+  const sg = document.getElementById('skillGrid');
+  if (sg) sg.innerHTML = skills.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--accent)">▸</span>${s}
+    </div>
+  `).join('');
+
+  // week 1 progress
+  const today = new Date().toISOString().split('T')[0];
+  const start = new Date(state.startDate);
+  const dayNum = Math.floor((new Date(today)-start)/86400000);
+  const w1d = document.getElementById('w1prog');
+  if (w1d) w1d.style.width = Math.min(100, (dayNum/7)*100) + '%';
+
+  renderMilestones();
+}
+
+// ══════════════════════════════════════
+// AI ASSISTANT
+// ══════════════════════════════════════
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg('user', msg);
+  appendMsg('ai', '...', true);
+  callAI(msg);
+}
+
+function quickChat(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+}
+
+function appendMsg(role, text, typing=false) {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}${typing?' msg-typing':''}`;
+  div.id = typing ? 'typingMsg' : '';
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function callAI(userMsg) {
+  const summary = buildContext();
+  const system = `You are LaunchPad AI Guide — a motivational, smart, and helpful assistant for a student preparing for a Microsoft Software Engineering Internship during their 30-day vacation. Your role is to:
+1. Analyze their progress data and give specific, actionable advice
+2. Help with DSA concepts (explain clearly with examples)
+3. Keep them motivated and on track
+4. Suggest improvements when they're lagging
+5. Be concise, energetic, and supportive — like a senior engineer mentor
+
+Current student data: ${summary}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system,
+        messages: [{ role:'user', content: userMsg }]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(c=>c.text||'').join('') || 'Sorry, I could not respond right now.';
+    const typing = document.getElementById('typingMsg');
+    if (typing) { typing.textContent = reply; typing.id=''; typing.className='msg msg-ai'; }
+    const box = document.getElementById('chatMessages');
+    box.scrollTop = box.scrollHeight;
+  } catch(e) {
+    const typing = document.getElementById('typingMsg');
+    if (typing) { typing.textContent = "I'm here to help! (Check your connection and try again)"; typing.id=''; typing.className='msg msg-ai'; }
+  }
+}
+
+function buildContext() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayActs = state.activities.filter(a=>a.date===today);
+  const totalMins = todayActs.reduce((s,a)=>s+parseInt(a.duration||0),0);
+  const probs = state.dsaProblems||[];
+  const todayProbs = probs.filter(p=>p.date===today);
+  const start = new Date(state.startDate);
+  const dayNum = Math.floor((new Date(today)-start)/86400000)+1;
+
+  return JSON.stringify({
+    dayOfVacation: dayNum,
+    studyHoursToday: (totalMins/60).toFixed(1),
+    studyTarget: state.studyTarget,
+    dsaProblemsToday: todayProbs.length,
+    totalDSASolved: probs.length,
+    streak: state.milestones.days,
+    projects: (state.projects||[]).map(p=>({name:p.name,status:p.status,progress:p.progress})),
+    recentActivities: todayActs.slice(0,3).map(a=>({name:a.name,type:a.type,duration:a.duration,quality:a.quality})),
+    milestones: state.milestones
+  });
+}
+
+// ══════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════
+function loadSettingsUI() {
+  const sd = document.getElementById('setStartDate');
+  if (sd) sd.value = state.startDate;
+  const sn = document.getElementById('setName');
+  if (sn) sn.value = state.name;
+  const st = document.getElementById('setStudyTarget');
+  if (st) st.value = state.studyTarget;
+  const dt = document.getElementById('setDsaTarget');
+  if (dt) dt.value = state.dsaTarget;
+}
+
+function saveSettings() {
+  state.startDate = document.getElementById('setStartDate').value || state.startDate;
+  state.name = document.getElementById('setName').value || state.name;
+  state.studyTarget = parseInt(document.getElementById('setStudyTarget').value)||5;
+  state.dsaTarget = parseInt(document.getElementById('setDsaTarget').value)||3;
+  saveState();
+  showToast('✅ Settings saved!');
+  updateDashboard();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'launchpad-data.json';
+  a.click();
+  showToast('📦 Data exported!');
+}
+
+function clearAll() {
+  if (confirm('Clear all data? This cannot be undone.')) {
+    localStorage.removeItem('launchpad_state');
+    location.reload();
+  }
+}
+
+// ══════════════════════════════════════
+// SMART NOTIFICATIONS
+// ══════════════════════════════════════
+function scheduleSmartNotifs() {
+  setInterval(() => {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const today = now.toISOString().split('T')[0];
+
+    // 9 AM reminder
+    if (h===9 && m===0) { addNotif('📚 Study Block 1', 'Time for DSA / Problem Solving!', 'var(--accent)'); showToast('📚 Study Block 1 starting!'); }
+    // 11 AM
+    if (h===11 && m===0) { addNotif('💡 Study Block 2', 'DSA Practice / Contests!', 'var(--accent)'); }
+    // 2 PM
+    if (h===14 && m===0) { addNotif('🧠 Study Block 3', 'Advanced Topics time!', 'var(--accent2)'); showToast('🧠 Study Block 3 starting!'); }
+    // 4 PM
+    if (h===16 && m===0) { addNotif('🎯 Study Block 4', 'Company Questions!', 'var(--amber)'); }
+    // 7 PM
+    if (h===19 && m===0) { addNotif('🚀 Project Time', 'Build & Implement!', 'var(--amber)'); }
+    // 9:30 PM
+    if (h===21 && m===30) {
+      const probs = (state.dsaProblems||[]).filter(p=>p.date===today).length;
+      if (probs < state.dsaTarget) {
+        addNotif('⚠️ DSA Goal Incomplete', `You solved ${probs}/${state.dsaTarget} problems today!`, 'var(--red)');
+        showToast(`⚠️ Only ${probs}/${state.dsaTarget} DSA problems today!`);
+      }
+    }
+    // 10 PM
+    if (h===22 && m===0) { addNotif('🌙 Review & Sleep', "Plan tomorrow, rest well. You're building your future!", 'var(--green)'); }
+  }, 60000);
+}
+
+// ══════════════════════════════════════
+// STREAK UPDATE
+// ══════════════════════════════════════
+function updateStreak() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayActs = state.activities.filter(a=>a.date===today);
+  if (todayActs.length > 0) {
+    document.getElementById('streak').textContent = state.milestones.days;
+    document.getElementById('streakProg').style.width = Math.min(100,(state.milestones.days/30)*100)+'%';
+  }
+}
+
+// ══════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════
+function renderAll() {
+  updateDashboard();
+  renderHeatmap();
+  renderWeekBars();
+  renderTimetable();
+  renderDSA();
+  renderProjects();
+  renderLog();
+  renderRoadmap();
+  renderMilestones();
+  loadSettingsUI();
+  updateStreak();
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+loadState();
+renderAll();
+updateClock();
+setInterval(updateClock, 30000);
+scheduleSmartNotifs();
+
+// Welcome notification
+setTimeout(() => {
+  const today = new Date().toISOString().split('T')[0];
+  if (today === state.startDate || !state.activities.length) {
+    addNotif('🚀 LaunchPad Loaded!', 'Your 30-day Microsoft prep journey begins. Let\'s go!', 'var(--accent)');
+  }
+}, 1000);
+
+// Motivation at evening
+const h = new Date().getHours();
+if (h >= 18 && h <= 20) {
+  setTimeout(() => { addNotif('💪 Evening Check-in', 'How productive was your day? Log your activities!', 'var(--amber)'); }, 2000);
+}
+</script>
+</body>
+</html>
