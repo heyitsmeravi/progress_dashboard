@@ -620,7 +620,6 @@
   <button class="nav-btn" onclick="showPage('dsa')" title="DSA Tracker">💡</button>
   <button class="nav-btn" onclick="showPage('projects')" title="Projects">🚀</button>
   <button class="nav-btn" onclick="showPage('roadmap')" title="Roadmap">🗺️</button>
-  <button class="nav-btn" onclick="showPage('assistant')" title="AI Assistant">🤖</button>
   <div class="nav-spacer"></div>
   <button class="nav-btn" onclick="showPage('log')" title="Daily Log">📝</button>
   <button class="nav-btn" onclick="showPage('settings')" title="Settings">⚙️</button>
@@ -979,38 +978,6 @@
   <div class="card" style="margin-top:16px">
     <h3>🏆 Overall Milestone Tracker</h3>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px" id="bigMilestones"></div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!-- PAGE: AI ASSISTANT -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="page" id="page-assistant">
-  <div class="section-title">🤖 AI Study Assistant</div>
-  <div class="grid-2">
-    <div class="card" style="display:flex;flex-direction:column">
-      <h3>💬 Chat with Your Guide</h3>
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg msg-ai">👋 Hey! I'm your LaunchPad AI Guide. I'm here to help you prepare for your Microsoft internship. Ask me anything — DSA concepts, project ideas, interview tips, or just how your day went!</div>
-      </div>
-      <div class="chat-input-row">
-        <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="btn btn-primary" onclick="sendChat()">Send</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3>⚡ Quick Prompts</h3>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-secondary" onclick="quickChat('Analyze my progress today and tell me what I should focus on')">📊 Analyze my progress</button>
-        <button class="btn btn-secondary" onclick="quickChat('I skipped some study blocks today. What should I do?')">😟 I skipped study blocks</button>
-        <button class="btn btn-secondary" onclick="quickChat('Explain Dynamic Programming with a simple example')">💡 Explain Dynamic Programming</button>
-        <button class="btn btn-secondary" onclick="quickChat('What DSA topics should I prioritize for Microsoft interviews?')">🎯 Microsoft interview topics</button>
-        <button class="btn btn-secondary" onclick="quickChat('Give me a mock interview question for today')">🎤 Give me a mock question</button>
-        <button class="btn btn-secondary" onclick="quickChat('I am feeling demotivated. Help me get back on track.')">💪 I need motivation</button>
-        <button class="btn btn-secondary" onclick="quickChat('Review my week and suggest improvements')">📅 Review my week</button>
-        <button class="btn btn-secondary" onclick="quickChat('Suggest a project I can build this week to impress recruiters')">🚀 Project suggestion</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -1740,91 +1707,6 @@ function renderRoadmap() {
 }
 
 // ══════════════════════════════════════
-// AI ASSISTANT
-// ══════════════════════════════════════
-function sendChat() {
-  const input = document.getElementById('chatInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  appendMsg('user', msg);
-  appendMsg('ai', '...', true);
-  callAI(msg);
-}
-
-function quickChat(msg) {
-  document.getElementById('chatInput').value = msg;
-  sendChat();
-}
-
-function appendMsg(role, text, typing=false) {
-  const box = document.getElementById('chatMessages');
-  const div = document.createElement('div');
-  div.className = `msg msg-${role}${typing?' msg-typing':''}`;
-  div.id = typing ? 'typingMsg' : '';
-  div.textContent = text;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
-}
-
-async function callAI(userMsg) {
-  const summary = buildContext();
-  const system = `You are LaunchPad AI Guide — a motivational, smart, and helpful assistant for a student preparing for a Microsoft Software Engineering Internship during their 30-day vacation. Your role is to:
-1. Analyze their progress data and give specific, actionable advice
-2. Help with DSA concepts (explain clearly with examples)
-3. Keep them motivated and on track
-4. Suggest improvements when they're lagging
-5. Be concise, energetic, and supportive — like a senior engineer mentor
-
-Current student data: ${summary}`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system,
-        messages: [{ role:'user', content: userMsg }]
-      })
-    });
-    const data = await res.json();
-    const reply = data.content?.map(c=>c.text||'').join('') || 'Sorry, I could not respond right now.';
-    const typing = document.getElementById('typingMsg');
-    if (typing) { typing.textContent = reply; typing.id=''; typing.className='msg msg-ai'; }
-    const box = document.getElementById('chatMessages');
-    box.scrollTop = box.scrollHeight;
-  } catch(e) {
-    const typing = document.getElementById('typingMsg');
-    if (typing) { typing.textContent = "I'm here to help! (Check your connection and try again)"; typing.id=''; typing.className='msg msg-ai'; }
-  }
-}
-
-function buildContext() {
-  const today = new Date().toISOString().split('T')[0];
-  const todayActs = state.activities.filter(a=>a.date===today);
-  const totalMins = todayActs.reduce((s,a)=>s+parseInt(a.duration||0),0);
-  const probs = state.dsaProblems||[];
-  const todayProbs = probs.filter(p=>p.date===today);
-  const start = new Date(state.startDate);
-  const dayNum = Math.floor((new Date(today)-start)/86400000)+1;
-
-  return JSON.stringify({
-    dayOfVacation: dayNum,
-    studyHoursToday: (totalMins/60).toFixed(1),
-    studyTarget: state.studyTarget,
-    dsaProblemsToday: todayProbs.length,
-    totalDSASolved: probs.length,
-    streak: state.milestones.days,
-    projects: (state.projects||[]).map(p=>({name:p.name,status:p.status,progress:p.progress})),
-    recentActivities: todayActs.slice(0,3).map(a=>({name:a.name,type:a.type,duration:a.duration,quality:a.quality})),
-    milestones: state.milestones
-  });
-}
-
-// ══════════════════════════════════════
 // SETTINGS
 // ══════════════════════════════════════
 function loadSettingsUI() {
@@ -1932,7 +1814,7 @@ function renderAll() {
 loadState();
 renderAll();
 updateClock();
-setInterval(updateClock, 30000);
+setInterval(updateClock, 1000);
 scheduleSmartNotifs();
 
 // Welcome notification
